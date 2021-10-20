@@ -2,4 +2,5 @@
     <string name="app_name">Picture Player</string>
     <string name="http">http://</string>
     <string name="start">Start</string>
+    <string name="filter">filter...</string>
 </resources>

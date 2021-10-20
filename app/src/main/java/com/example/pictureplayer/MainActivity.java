@@ -8,11 +8,14 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.VideoView;
 
@@ -29,6 +32,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -88,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MutableLiveData<Content[]> contents;
+    private MutableLiveData<Content[]> filteredContents;
     private MutableLiveData<Content[]> selectedContents;
     private RecyclerViewAdapter adapter;
 
@@ -98,8 +104,11 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+
         contents = new MutableLiveData<>();
+        filteredContents = new MutableLiveData<>();
         selectedContents = new MutableLiveData<>();
+
         adapter = new RecyclerViewAdapter(MainActivity.this);
         recyclerView.setAdapter(adapter);
 
@@ -122,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                Content[] val = contents.getValue();
+                Content[] val = filteredContents.getValue();
                 selectedContents.setValue(Arrays.copyOfRange(val, ITEMS_PER_PAGE * i, Math.min(ITEMS_PER_PAGE * (i + 1), val.length)));
             }
 
@@ -133,6 +142,44 @@ public class MainActivity extends AppCompatActivity {
         });
 
         contents.observe(this, new Observer<Content[]>() {
+            @Override
+            public void onChanged(Content[] contents) {
+                filteredContents.setValue(contents);
+            }
+        });
+
+        EditText filter = findViewById(R.id.textView2);
+
+        filter.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // nop
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // nop
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Content[] vals = contents.getValue();
+                if (vals == null) return;
+                String text = filter.getText().toString();
+                if (text.isEmpty())
+                {
+                    filteredContents.setValue(vals);
+                    return;
+                }
+                String[] filters = text.split(" ");
+                Stream<Content> stream = Arrays.stream(vals);
+                for (String filter : filters)
+                    stream = stream.filter(c -> c.name.contains(filter));
+                filteredContents.setValue(stream.toArray(Content[]::new));
+            }
+        });
+
+        filteredContents.observe(this, new Observer<Content[]>() {
             @Override
             public void onChanged(Content[] contents) {
                 List<String> pageList = new ArrayList<>();

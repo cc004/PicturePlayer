@@ -17,6 +17,18 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
 
+
+        <EditText
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/filter"
+            android:autofillHints=""
+            android:textSize="18sp"
+            android:inputType="text"
+            tools:layout_editor_absoluteX="100dp"
+            tools:layout_editor_absoluteY="138dp" />
+
         <Spinner
             android:id="@+id/spinner"
             android:layout_margin="5dp"
