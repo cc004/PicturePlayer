@@ -24,7 +24,7 @@ public class MovieActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (jzvdStd.backPress()) {
+        if (JzvdStd.backPress()) {
             return;
         }
         this.finish();
@@ -32,6 +32,6 @@ public class MovieActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        jzvdStd.releaseAllVideos();
+        JzvdStd.releaseAllVideos();
     }
 }

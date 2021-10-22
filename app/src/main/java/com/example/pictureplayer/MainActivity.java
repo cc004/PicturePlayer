@@ -6,6 +6,7 @@ import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -36,6 +37,13 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static class RefInt {
+        public int t;
+        public RefInt(int t) {
+            this.t = t;
+        }
+    }
 
     private RecyclerView recyclerView;
 
@@ -92,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
+    private MutableLiveData<RefInt> position;
+    private MutableLiveData<String> filter;
     private MutableLiveData<Content[]> contents;
     private MutableLiveData<Content[]> filteredContents;
     private MutableLiveData<Content[]> selectedContents;
@@ -108,43 +118,78 @@ public class MainActivity extends AppCompatActivity {
         contents = new MutableLiveData<>();
         filteredContents = new MutableLiveData<>();
         selectedContents = new MutableLiveData<>();
+        filter = new MutableLiveData<>();
+        position = new MutableLiveData<>();
 
         adapter = new RecyclerViewAdapter(MainActivity.this);
         recyclerView.setAdapter(adapter);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Content[] datas = new Content[0];
-                try {
-                    datas = getContents(getIntent().getExtras().getString("addr"));
-                } catch (Exception e) {
-                    Log.e(MainActivity.class.getName(), "error fetching addr", e);
-                }
-                contents.postValue(datas);
-            }
-        }).start();
-
         final int ITEMS_PER_PAGE = 20;
-        Spinner spinner = findViewById(R.id.spinner);
-
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                Content[] val = filteredContents.getValue();
-                selectedContents.setValue(Arrays.copyOfRange(val, ITEMS_PER_PAGE * i, Math.min(ITEMS_PER_PAGE * (i + 1), val.length)));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
 
         contents.observe(this, new Observer<Content[]>() {
             @Override
             public void onChanged(Content[] contents) {
                 filteredContents.setValue(contents);
+            }
+        });
+
+        position.observe(this, new Observer<RefInt>() {
+            @Override
+            public void onChanged(RefInt refInt) {
+                int i = refInt.t;
+                Content[] val = filteredContents.getValue();
+                selectedContents.setValue(Arrays.copyOfRange(val, ITEMS_PER_PAGE * i, Math.min(ITEMS_PER_PAGE * (i + 1), val.length)));
+            }
+        });
+
+        filter.observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                Content[] vals = contents.getValue();
+                if (vals == null) return;
+                if (s.isEmpty())
+                {
+                    filteredContents.setValue(vals);
+                    return;
+                }
+                String[] filters = s.split(" ");
+                Stream<Content> stream = Arrays.stream(vals);
+                for (String filter : filters)
+                    stream = stream.filter(c -> c.name.contains(filter));
+                filteredContents.setValue(stream.toArray(Content[]::new));
+            }
+        });
+
+        selectedContents.observe(this, new Observer<Content[]>() {
+            @Override
+            public void onChanged(Content[] contents) {
+                adapter.contents = contents;
+                adapter.notifyDataSetChanged();
+            }
+        });
+
+        Spinner spinner = findViewById(R.id.spinner);
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                position.setValue(new RefInt(i));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+        filteredContents.observe(this, new Observer<Content[]>() {
+            @Override
+            public void onChanged(Content[] contents) {
+                List<String> pageList = new ArrayList<>();
+                for (int i = 0; 20 * i < contents.length; ++i) {
+                    pageList.add("第" + (i + 1) + "页");
+                }
+                spinner.setAdapter(new ArrayAdapter<String>(MainActivity.this, R.layout.my_spinner, pageList));
+                spinner.setSelection(0);
             }
         });
 
@@ -163,40 +208,21 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                Content[] vals = contents.getValue();
-                if (vals == null) return;
-                String text = filter.getText().toString();
-                if (text.isEmpty())
-                {
-                    filteredContents.setValue(vals);
-                    return;
-                }
-                String[] filters = text.split(" ");
-                Stream<Content> stream = Arrays.stream(vals);
-                for (String filter : filters)
-                    stream = stream.filter(c -> c.name.contains(filter));
-                filteredContents.setValue(stream.toArray(Content[]::new));
+                MainActivity.this.filter.setValue(filter.getText().toString());
             }
         });
 
-        filteredContents.observe(this, new Observer<Content[]>() {
+        new Thread(new Runnable() {
             @Override
-            public void onChanged(Content[] contents) {
-                List<String> pageList = new ArrayList<>();
-                for (int i = 0; 20 * i < contents.length; ++i) {
-                    pageList.add("第" + (i + 1) + "页");
+            public void run() {
+                Content[] datas = new Content[0];
+                try {
+                    datas = getContents(getIntent().getExtras().getString("addr"));
+                } catch (Exception e) {
+                    Log.e(MainActivity.class.getName(), "error fetching addr", e);
                 }
-                spinner.setAdapter(new ArrayAdapter<String>(MainActivity.this, R.layout.my_spinner, pageList));
-                spinner.setSelection(0);
+                contents.postValue(datas);
             }
-        });
-
-        selectedContents.observe(this, new Observer<Content[]>() {
-            @Override
-            public void onChanged(Content[] contents) {
-                adapter.contents = contents;
-                adapter.notifyDataSetChanged();
-            }
-        });
+        }).start();
     }
 }
