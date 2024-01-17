@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
             outStream.write(buffer,0,len);
         }
         inStream.close();
+        android.util.Log.e("aaa", "eee");
         return outStream.toByteArray();
     }
 
@@ -76,13 +78,19 @@ public class MainActivity extends AppCompatActivity {
         return -1;
     }
 
-    private final static byte[] spliter = new byte[]{0x40, (byte)0xef, (byte)0xbc, (byte)0x81, 0x40};
+    private static final byte[] spliter = new byte[]{0x40, (byte)0xef, (byte)0xbc, (byte)0x81, 0x40};
 
-    private static Content[] getContents(String addr) throws Exception {
-        addr = new JSONObject(new String(getHttpContent(addr), StandardCharsets.UTF_8)).getString("content");
-        addr = addr.substring(addr.indexOf("src=\"") + 5);
-        addr = addr.substring(0, addr.indexOf("\""));
-        byte[] content = getHttpContent(addr);
+    private static Content[] getContents(String addr0) throws Exception {
+        byte[] content;
+        try {
+            String addr = new JSONObject(new String(getHttpContent(addr0), StandardCharsets.UTF_8)).getString("content");
+            addr = addr.substring(addr.indexOf("src=\"") + 5);
+            addr = addr.substring(0, addr.indexOf("\""));
+            content = getHttpContent(addr);
+        } catch (Exception e) {
+            content = getHttpContent(addr0);
+        }
+
         Log.d("aaa", "" + content.length);
         int begin = search(content, spliter, 0) + spliter.length;
         int end = search(content, spliter, begin);
@@ -211,6 +219,8 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.filter.setValue(filter.getText().toString());
             }
         });
+
+
 
         new Thread(new Runnable() {
             @Override

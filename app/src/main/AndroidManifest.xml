@@ -24,7 +24,7 @@
             android:name=".MainActivity">
         </activity>
         <activity
-            android:configChanges="keyboardHidden|orientation|screenSize|keyboard"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:name=".MovieActivity">
         </activity>
     </application>
