@@ -41,7 +41,7 @@ public class MovieActivity extends GSYBaseActivityDetail<StandardGSYVideoPlayer>
         PlayerFactory.setPlayManager(IjkPlayerManager.class);
         CacheFactory.setCacheManager(ProxyCacheManager.class);
         ProxyCacheManager.setFileNameGenerator(this);
-        GSYVideoType.setShowType(GSYVideoType.SCREEN_MATCH_FULL);
+        GSYVideoType.setShowType(GSYVideoType.SCREEN_TYPE_DEFAULT);
         GSYVideoType.setRenderType(GSYVideoType.GLSURFACE);
 
         List<VideoOptionModel> list = new ArrayList<>();
