@@ -30,24 +30,37 @@ import tv.danmaku.ijk.media.exo2.Exo2PlayerManager;
 import tv.danmaku.ijk.media.exo2.ExoPlayerCacheManager;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
-public class MovieActivity extends GSYBaseActivityDetail<StandardGSYVideoPlayer> implements FileNameGenerator {
+public class MovieActivity extends GSYBaseActivityDetail<StandardGSYVideoPlayer> {
 
     StandardGSYVideoPlayer detailPlayer;
+
+    private static Map<String, String> urlTitleCache = new HashMap<>();
+
+    {
+        PlayerFactory.setPlayManager(IjkPlayerManager.class);
+        CacheFactory.setCacheManager(ProxyCacheManager.class);
+        ProxyCacheManager.setFileNameGenerator(new FileNameGenerator() {
+            @Override
+            public String generate(String url) {
+                return urlTitleCache.get(url);
+            }
+        });
+        GSYVideoType.setShowType(GSYVideoType.SCREEN_TYPE_DEFAULT);
+        GSYVideoType.setRenderType(GSYVideoType.GLSURFACE);
+        List<VideoOptionModel> list = new ArrayList<>();
+        list.add(new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "max_cached_duration", -1));
+        list.add(new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "infbuf", 1));
+        GSYVideoManager.instance().setOptionModelList(list);
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie);
-        PlayerFactory.setPlayManager(IjkPlayerManager.class);
-        CacheFactory.setCacheManager(ProxyCacheManager.class);
-        ProxyCacheManager.setFileNameGenerator(this);
-        GSYVideoType.setShowType(GSYVideoType.SCREEN_TYPE_DEFAULT);
-        GSYVideoType.setRenderType(GSYVideoType.GLSURFACE);
 
-        List<VideoOptionModel> list = new ArrayList<>();
-        list.add(new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "max_cached_duration", -1));
-        list.add(new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "infbuf", 1));
-        GSYVideoManager.instance().setOptionModelList(list);
+        Bundle extras = getIntent().getExtras();
+        urlTitleCache.putIfAbsent(extras.getString("addr"), extras.getString("title"));
 
         detailPlayer = (StandardGSYVideoPlayer) findViewById(R.id.detail_player);
         detailPlayer.getTitleTextView().setVisibility(View.GONE);
@@ -94,13 +107,5 @@ public class MovieActivity extends GSYBaseActivityDetail<StandardGSYVideoPlayer>
 
     private static String removeInvalidChars(String fileName) {
         return fileName.replaceAll("[\\\\/:*?\"<>|]", "");
-    }
-
-    @Override
-    public String generate(String url) {
-        Bundle extras = getIntent().getExtras();
-        if (!url.equals(extras.getString("addr")))
-            Log.e("MovieActivity", url + " does not match " + extras.getString("addr"));
-        return removeInvalidChars(extras.getString("title")) + ".mp4";
     }
 }
