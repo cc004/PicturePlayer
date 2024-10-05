@@ -49,6 +49,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 intent.putExtra("addr", content.video);
                 intent.putExtra("title", content.name);
                 intent.putExtra("cover", content.cover);
+                intent.putExtra("cookie", content.cookie);
                 context.startActivity(intent);
             }
         });

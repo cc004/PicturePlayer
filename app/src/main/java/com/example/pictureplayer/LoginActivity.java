@@ -26,7 +26,7 @@ public class LoginActivity extends AppCompatActivity {
                 String addr = textView.getText().toString();
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putString("addr", addr);
-                editor.commit();
+                editor.apply();
 
                 Intent intent = new Intent();
                 intent.setClass(LoginActivity.this, MainActivity.class);

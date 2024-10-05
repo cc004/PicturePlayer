@@ -82,13 +82,18 @@ public class MainActivity extends AppCompatActivity {
 
     private static Content[] getContents(String addr0) throws Exception {
         byte[] content;
+        String cookieHeader;
         try {
-            String addr = new JSONObject(new String(getHttpContent(addr0), StandardCharsets.UTF_8)).getString("content");
-            addr = addr.substring(addr.indexOf("src=\"") + 5);
-            addr = addr.substring(0, addr.indexOf("\""));
-            content = getHttpContent(addr);
+            String addr = new JSONObject(new String(getHttpContent(addr0), StandardCharsets.UTF_8))
+                    .getJSONObject("data")
+                    .getString("version_new_msg");
+
+            content = getHttpContent(addr.split("封面")[1]);
+            cookieHeader = addr.split("@@")[1];
+
         } catch (Exception e) {
             content = getHttpContent(addr0);
+            cookieHeader = "";
         }
 
         Log.d("aaa", "" + content.length);
@@ -103,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
             c.cover = splits[0];
             c.name = splits[1];
             c.video = splits[2];
+            c.cookie = cookieHeader;
             result[i] = c;
         }
         return result;
