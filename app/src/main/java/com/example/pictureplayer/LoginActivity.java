@@ -1,5 +1,6 @@
 package com.example.pictureplayer;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 public class LoginActivity extends AppCompatActivity {
     @Override
@@ -17,7 +19,6 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         TextView textView = findViewById(R.id.textView);
         SharedPreferences pref = this.getPreferences(Context.MODE_PRIVATE);
-
         textView.setText(pref.getString("addr", ""));
 
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
@@ -34,5 +35,6 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
     }
 }
